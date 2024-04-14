@@ -29,13 +29,21 @@
 
 import dotenv from 'dotenv'
 import connectDB from './db/index.js'
-import nodemon from 'nodemon'
+import {app} from './app.js'
 
 dotenv.config({
     path: './env'
 })
 
-connectDB();
+connectDB()
+.then(() => {
+    app.listen(process.env.PORT || 8000, () => {
+        console.log(`server is running at port : ${process.env.PORT} `)
+    })
+})
+.catch((err) => {
+    console.log("Mongodb connection faild !!! ",err);
+})
 
 // to use this dotenv we have to change some experiment in script in package.json file
 //  -> nodemon -r dotenv/config --experimental-json-modules
