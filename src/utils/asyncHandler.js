@@ -1,5 +1,5 @@
 // hm yaha ka code direct app.js me vi likh skate hai .
-// Modularity ke liye hm yaha likigh rahe hai.
+// Modularity ke liye hm yaha likh rahe hai.
 // Taki hme agar koi function pass kare to hm yaha se direct databse call kr skte hai.
 
 //** TWO WAYS TO CALL: */
@@ -20,10 +20,12 @@
 
 // 2. PROMISE :
 
-const asyncHanddler = async(requestHandler)  => {
-    Promise.resolve(requestHandler(req,res,next))
-    .catch((err) => next(err))
+const asyncHandler = (requestHandler) => {
+    return (req, res, next) => {
+        Promise.resolve(requestHandler(req, res, next))
+            .catch((err) => next(err))
+    } 
 }
 
 
-export{asyncHanddler}
+export { asyncHandler }
