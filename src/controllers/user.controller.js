@@ -9,9 +9,14 @@ import { ApiResponse } from '../utils/ApiResponse.js';
 //********************* GENERATE ACCESS AND REFRESH TOKEN: */
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
+        console.log("Inside generate token file")
         const user = await User.findById(userId)
+        console.log(user);
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
+        console.log("Printing token")
+        console.log(accessToken)
+        console.log(refreshToken)
 
         //storing refresh token into database 
         user.refreshToken = refreshToken
@@ -118,7 +123,7 @@ const registerUser = asyncHandler(async (req, res) => {
 })
 
 //************************** LOGIN ********************
-const loginUser = asyncHandler(async (req,) => {
+const loginUser = asyncHandler(async (req,res) => {
     //req body -> data
     // username or email
     // find the user
@@ -131,10 +136,11 @@ const loginUser = asyncHandler(async (req,) => {
     const { email, username, password } = req.body
 
     //** checking username and email is passed or not */
-    if (!username || !email) {
+    console.log(email);
+    if (!(username || email)) {
         throw new ApiError(400, "username or email is required");
     }
-
+    console.log("outside if block")
     //** checking user in mongodb  */
     const user = await User.findOne({// findOne mongooes ka method h to iko sirf mongodb ke data pe hi laga skte h
         $or: [{ username }, { email }]// $or is a monogodb operator that use ot find any one is it username or email .it return
@@ -149,15 +155,16 @@ const loginUser = asyncHandler(async (req,) => {
     const isPasswordValid = await user.isPasswordCorrect(password)
 
     if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid user Credentials");
+        throw new ApiError(401, "Invalid user Credentials")
     }
 
-
+    console.log(user._id);
     //** generating access and refresh token */
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
 
 
     const logedInUser = await User.findById(user._id).select("-password -refreshToken")
+    console.log("Inside loginUser:\n",logedInUser)
 
 
     const options = {
@@ -212,4 +219,54 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 })
 
-export { registerUser, loginUser, logoutUser }
+//************ MAKING REFRESH THE ACCESS TOKEN *************** */
+const refreshAccessToken = asyncHandler(async(req,res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+
+    if(!incomingRefreshToken){
+        throw new ApiError(401,"Unauthorized request")
+    }
+    try {
+        const decodedToken = jwt.verify(
+            incomingRefreshToken,
+            process.env.REFRESH_TOKEN_SECRET 
+        )
+
+        const user = await User.findById(decodedToken._id)
+
+        if(!user){
+            throw new ApiError(401,"Invalid refresh token")
+        }
+
+        if(incomingRefreshToken !== user?.refreshToken){
+            throw new ApiError(401,"Refresh token is expired or used")
+        }
+
+        const options ={
+            httpOnly:true,
+            secure:true
+        }
+
+        const {accessToken,newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+
+        return res
+        .status(200)
+        .cookie("accessToken",accessToken,options)
+        .cookie("refreshToken",newRefreshToken,options)
+        .json(
+            new ApiResponse(
+                200,
+                {accessToken,refreshToken:newRefreshToken},
+                "Access token refreshed"
+            )
+        )
+
+
+    } catch (error) {
+        throw new ApiError(401, error?.message || "Invalid refresh token")
+    }
+
+
+})
+
+export { registerUser, loginUser, logoutUser,refreshAccessToken }

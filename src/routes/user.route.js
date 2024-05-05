@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser,logoutUser } from "../controllers/user.controller.js";
+import { loginUser, registerUser,logoutUser,refreshAccessToken } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middelware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -19,6 +19,10 @@ router.route("/register").post(upload.fields([
 router.route("/login").post(loginUser)
 
 //secured routes
-router.route("/logout").post(verifyJWT, logoutUser)
+router.route("/logout").post(verifyJWT, logoutUser)//verify jwt is a middelware function that verify the token after they move to logoutUser method for removing access and refresh token.
+
+router.route("/refresh-token").post(refreshAccessToken)
 
 export default router;
+
+
