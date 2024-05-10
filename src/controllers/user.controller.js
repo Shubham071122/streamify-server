@@ -4,6 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadOnCloudinary } from '../utils/Cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Subscription } from '../models/subscription.model.js';
+import mongoose from 'mongoose';
 
 
 
@@ -392,7 +393,7 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 
-//***************** USER CHANNEL PROFILE ****************** */
+//***************** USER CHANNEL PROFILE (AGGREGATION PIPELINE) ****************** */
 const getUserChannelProfile = asyncHandler(async (req, res) => {
     const { username } = req.params
 
@@ -413,6 +414,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 foreignField: "channel",
                 as: "subscribers"
             }
+            // subscribers count krne ke liye hm channel count kr lenge data base se.
         },
         {
             $lookup: {
@@ -431,8 +433,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                     $size: "$subscribedTo"
                 },
                 isSubscribed: {
-                    $cond: {
-                        if: { $in: [req.user._id, "subscribers.subscriber"] },
+                    $cond: { // ye condition laga ke hm check karenge ki channel subscribed h ya nahi.
+                        if: { $in: [req.user._id, "$subscribers.subscriber"] },
                         then: true,
                         else: false
                     }
@@ -440,11 +442,11 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             }
         },
         {
-            $project: {// SEND KEREGA FRONTEND ME
+            $project: {// SEND KEREGA FRONTEND ME 
                 fullName: 1,
                 username: 1,
                 subscribersCount: 1,
-                channelsSubscribedToCount: 1,
+                channelsSubscribedToCount: 1,//user jo channel subscribe kra h.
                 isSubscribed: 1,
                 avatar: 1,
                 coverImage: 1,
@@ -466,8 +468,60 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
 })
 
 
+//*************** USER WATCH HISTORY (AGGREGATION PIPLINE) **************** */
+// HAM ISME NESTED LOOKUP USE KARENGE.
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                // _id: user._id // this will not work bcz yaha pe mongoose kam nahi krta h direct code jata h.
+                _id: new mongoose.Types.ObjectId(user._id)
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [// video ke owner ko retrive kr rahe h
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1,
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200,user[0].getWatchHistory,"Watch History fetched successfully")
+    )
+})
 
 
 
-
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile } 
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory } 
