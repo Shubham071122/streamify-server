@@ -19,4 +19,5 @@ dotenv.config({
 # 2. Custom api Error handling.
 
 
-
+/// IF YOU GET ERROR.
+# CHECK VIDEO SCHEMA EXPORT 
