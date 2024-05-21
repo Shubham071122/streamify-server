@@ -1,0 +1,6 @@
+{
+    "editor.cursorStyle": "line",
+    "editor.tokenColorCustomizations": {
+        "comments": "#00e64d"
+    }
+}

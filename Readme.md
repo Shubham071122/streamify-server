@@ -1,3 +1,4 @@
+# If we want to use module in presence of require we have to set ["type": "module"] in package.josn file.(6th line)
 # This folder show you how you connect mongodb with express.
 
 # 1. For connecting with database there is two approch .

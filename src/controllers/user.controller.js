@@ -1,7 +1,7 @@
 import { User } from '../models/user.model.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
-import { uploadOnCloudinary } from '../utils/Cloudinary.js';
+import { uploadOnCloudinary } from '../utils/Cloudinary.js';3
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { Subscription } from '../models/subscription.model.js';
 import mongoose from 'mongoose';
@@ -47,6 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //*getting user details:
     const { fullName, email, username, password } = req.body
+    console.log("REQ.FILES USER:",req.files);
     console.log("email: ", email);
     // console.log(req.body)
 
@@ -87,13 +88,13 @@ const registerUser = asyncHandler(async (req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
-    //*checking the avatar is uploaded on cloudinary or not:
+    //checking the avatar is uploaded on cloudinary or not:
     if (!avatar) {
         throw new ApiError(400, "Avatar file is required");
     }
 
 
-    //* created user object - created entry in db:
+    // created user object - created entry in db:
     const user = await User.create({
         fullName,
         avatar: avatar.url,
@@ -103,7 +104,7 @@ const registerUser = asyncHandler(async (req, res) => {
         username: username.toLowerCase()
     })
 
-    //*removeing password and refresh token field from response:
+    //removeing password and refresh token field from response:
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
@@ -112,12 +113,12 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log(createdUser);
 
 
-    //*checking for user creation:
+    //checking for user creation:
     if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registring the user");
     }
 
-    //*return res:
+    //return res:
     return res.status(201).json(
         new ApiResponse(200, createdUser, "User Registerd successfully")
     )
@@ -271,7 +272,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 })
 
-//********** CHANGEING PASSWORD ******* */
+//********** CHANGING PASSWORD ******* */
 const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body
 
@@ -303,29 +304,38 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 
-//**************** UPDATING THE USER ACCOUNT *********** */
+//************ UPDATING THE USER ACCOUNT *********** */
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullName, email } = req.body
+    console.log("REquset data:",req.body);
 
     if (!fullName || !email) {
         throw new ApiError(400, "All fields are required")
     }
 
-    const user = User.findByIdAndUpdate(
-        req.user?._id,
-        {
-            $set: {
-                fullName,
-                email: email
+    try {
+        const user = await User.findByIdAndUpdate(
+            req.user?._id,
+            {
+                $set: {
+                    fullName: fullName,
+                    email: email
+                }
+            }, 
+            {
+                new: true
             }
-        }, {
-        new: true
-    }
-    ).select("-password")
+        ).select("-password");
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, user, "Account details updated successfully"))
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        return res.status(200).json(new ApiResponse(200, user, "Account details updated successfully"));
+    } catch (error) {
+        // Handle unexpected errors
+        throw new ApiError(500, "An error occurred while updating account details");
+    }
 })
 
 //************ UPDATING AVATAR *********** */
@@ -353,7 +363,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
             new: true
         }
     ).select("-password")
-
+ 
     return res
         .status(200, user, "Avatar image updated successfully")
 
