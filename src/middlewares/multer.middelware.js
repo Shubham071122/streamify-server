@@ -7,10 +7,11 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
     //   const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
       cb(null, `${Date.now()}-${file.originalname}`)//file ke sath or vi function h sirf (originalname) use krna efficent nahi h
+      console.log("Inside multer::::")
     }
   })
   
   export const upload = multer({
      storage, 
-     limits: { fileSize: 50 * 1024 * 1024 } // 50 MB limit for file uploads
+    //  limits: { fileSize: 50 * 1024 * 1024 } // 50 MB limit for file uploads
   })

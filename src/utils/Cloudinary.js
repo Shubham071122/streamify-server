@@ -26,4 +26,27 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 }
 
-export{uploadOnCloudinary}
+
+// ********* Delete the resource from Cloudinary
+const deleteFromCloudinary = async (url,resource_type) => {
+  const publicId = extractPublicId(url);
+  try{
+    if(!url) return null;
+    await cloudinary.uploader.destroy(publicId,{
+      resource_type:resource_type
+    });
+    console.log(`Deleted resource from Cloudinary: ${publicId}`);
+  }catch(error){
+    console.error("Error deleting resources from Cloudinary",error)
+  }
+}
+
+//*** Function to extract public ID from Cloudinary URL
+const extractPublicId = (url) => {
+  const parts = url.split('/');
+  const publicIdWithExtension = parts[parts.length - 1]; // Last part of the URL
+  const publicId = publicIdWithExtension.split('.')[0]; // Remove file extension
+  return publicId;
+};
+
+export{uploadOnCloudinary,deleteFromCloudinary}
