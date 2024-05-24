@@ -25,7 +25,7 @@ router.route("/update-video/:videoId").patch(upload.single("thumbnail"),updateVi
 
 router.route("/delete-video/:videoId").delete(deleteVideo)
 
-router.route("/toggle-publish-status/:videoId").put(togglePublishStatus)
+router.route("/toggle-publish-status/:videoId").patch(togglePublishStatus)
 
 
 
