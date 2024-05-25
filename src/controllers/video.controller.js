@@ -86,6 +86,7 @@ const getAllVideos = asyncHandler(async(req,res) => {
 //************  PUBLISHING VIDEO *********** */
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body
+    const userId = req.user._id;
 
     // check if file is included in the request
     console.log(req.files);
@@ -133,7 +134,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
         description,
         thumbnail: thumbnail.url,
         videoFile: video.url,
-        duration: videoDurationInSeconds
+        duration: videoDurationInSeconds,
+        owner:userId
     })
 
     console.log(newVideo);
