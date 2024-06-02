@@ -3,7 +3,6 @@ import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadOnCloudinary } from '../utils/Cloudinary.js';3
 import { ApiResponse } from '../utils/ApiResponse.js';
-import { Subscription } from '../models/subscription.model.js';
 import mongoose from 'mongoose';
 
 
@@ -11,14 +10,14 @@ import mongoose from 'mongoose';
 //********************* GENERATE ACCESS AND REFRESH TOKEN: ***************************/
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
-        console.log("Inside generate token file")
+        // console.log("Inside generate token file")
         const user = await User.findById(userId)
         console.log(user);
         const accessToken = user.generateAccessToken()
         const refreshToken = user.generateRefreshToken()
-        console.log("Printing token")
-        console.log(accessToken)
-        console.log(refreshToken)
+        // console.log("Printing token")
+        // console.log(accessToken)
+        // console.log(refreshToken)
 
         //storing refresh token into database 
         user.refreshToken = refreshToken
@@ -300,7 +299,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res
         .status(200)
-        .json(200, req.user, "current user fetched successfully")
+        .json(new ApiResponse(200, req.user, "current user fetched successfully"))
 })
 
 
