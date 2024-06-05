@@ -30,7 +30,7 @@ function calculateVideoDuration(videoLocalPath) {
 }
 
 //************ FETCHING ALL VIDEO ******************* */
-const getAllVideos = asyncHandler(async (req, res) => {
+const getVideos = asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
@@ -95,6 +95,42 @@ const getAllVideos = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not found!");
   }
 });
+
+
+//*********** FETCHING VIDEOS FOR HOME SCREEN ********** */
+const getAllVideos = asyncHandler(async(req,res) => {
+     const {
+       page = 1,
+       limit = 10,
+       sortBy = "createdAt",
+       sortType = "desc",
+     } = req.query;
+
+     try {
+       const sortOptions = {};
+       sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+
+       const videos = await Video.find()
+         .populate("owner", "fullName avatar")
+         .sort(sortOptions)
+         .skip((page - 1) * limit)
+         .limit(parseInt(limit));
+
+       const totalVideos = await Video.countDocuments();
+       const totalPages = Math.ceil(totalVideos / limit);
+
+       res.status(200).json(
+         new ApiResponse(200, "Videos fetched successfully", {
+           videos,
+           totalPages,
+           totalVideos,
+           currentPage: parseInt(page),
+         })
+       );
+     } catch (error) {
+       throw new ApiError(404, "Videos not found!");
+     }
+})
 
 //************  PUBLISHING VIDEO *********** */
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -307,6 +343,7 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 });
 
 export {
+  getVideos,
   getAllVideos,
   publishAVideo,
   getVideoById,
