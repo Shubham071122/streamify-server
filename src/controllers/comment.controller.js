@@ -95,7 +95,7 @@ const addComment = asyncHandler(async (req, res) => {
 
     console.log("Comment: ", newComment);
 
-    res.status(200).json(new ApiResponse(200, "Comment added successfully"));
+    res.status(200).json(new ApiResponse(200, newComment,"Comment added successfully"));
   } catch (error) {
     console.log("Error adding comment: ", error);
     throw new ApiError(500, "Internal server error");
