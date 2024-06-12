@@ -56,7 +56,7 @@ const toggleSubscription = asyncHandler(async(req,res) => {
 //************** SUBSCRIBER LIST OF A CHANNEL ***********/
 const getUserChannelSubscribers = asyncHandler(async(req,res) => {
     const {channelId} = req.params;
-
+    // console.log("channelId",channelId)
     if(!channelId){
         throw new ApiError(400,"Channel id is required");
     }
@@ -67,8 +67,8 @@ const getUserChannelSubscribers = asyncHandler(async(req,res) => {
         if(!subscribers){
             throw new ApiError(404, "Subscribers not found");
         }
-
-        res.status(400).json(
+        // console.log("subscribers:",subscribers)
+        res.status(200).json(
             new ApiResponse(200,subscribers,"Subscriber fetched successfully")
         )
 
