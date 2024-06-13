@@ -532,5 +532,27 @@ const getWatchHistory = asyncHandler(async (req, res) => {
 })
 
 
+//************************ GET USER DATA BY ID ************************** */
+const getUserDetailbyId = asyncHandler(async(req,res) => {
+    const {userId} = req.params;
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory } 
+    if(!userId){
+        throw ApiError(400,"User id is required");
+    }
+    try {
+        const user = await User.findById(userId).select('avatar fullName');
+        if(!user){
+            throw ApiError(404, "User not found");
+        }
+        // console.log("User by id:",user);
+        res.status(200).json(
+            new ApiResponse(200,user,"User Fetched successfully")
+        )
+    } catch (error) {
+        console.log("Error while fetching user:",error);
+        throw ApiError(500,"Error while fetching user");
+    }
+})
+
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,getUserDetailbyId } 
