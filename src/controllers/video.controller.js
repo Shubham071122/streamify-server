@@ -29,7 +29,7 @@ function calculateVideoDuration(videoLocalPath) {
   });
 }
 
-//************ FETCHING ALL VIDEO ******************* */
+//************ FETCHING ALL VIDEO DEPENDING ON SEARCH QUERY ******************* */
 const getVideos = asyncHandler(async (req, res) => {
   const {
     page = 1,
@@ -40,7 +40,7 @@ const getVideos = asyncHandler(async (req, res) => {
     userId,
   } = req.query;
 
-  // console.log(query);
+  console.log('Received query:', query);
 
   const filter = {};
   if (query) {
@@ -92,6 +92,7 @@ const getVideos = asyncHandler(async (req, res) => {
       })
     );
   } catch (error) {
+    console.error('Error while fetching videos:', error);
     throw new ApiError(404, "Video not found!");
   }
 });
@@ -104,7 +105,7 @@ const getAllVideos = asyncHandler(async(req,res) => {
        limit = 10,
        sortBy = "createdAt",
        sortType = "desc",
-     } = req.query;
+     } = req.params;
 
      try {
        const sortOptions = {};

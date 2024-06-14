@@ -8,7 +8,7 @@ router.use(verifyJWT)
 
 router.route("/").get(getAllVideos)
 
-router.route("/q/:query").get(getVideos)
+router.route("/search").get(getVideos)
 
 router.route("/publish").post(upload.fields([
     {
