@@ -397,7 +397,8 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     ).select("-password")
 
     return res
-        .status(200, user, "Cover image updated successfully")
+        .status(200)
+        .json(200, user, "Cover image updated successfully")
 
 })
 
@@ -554,5 +555,27 @@ const getUserDetailbyId = asyncHandler(async(req,res) => {
     }
 })
 
+//********************* VERIFING PASSWORD ******************* */
+const verifyPassword = asyncHandler(async(req,res) => {
+    const {password} = req.body;
+    const user = await User.findById(req.user._id);
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,getUserDetailbyId } 
+    if(!user) {
+        throw new ApiError(400,"User not found");
+    }
+
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Invalid password");
+    }
+
+    res.status(200).json(
+        new ApiResponse (200, "Password is correct")
+    )
+
+
+})
+
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,getUserDetailbyId ,verifyPassword} 
