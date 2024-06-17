@@ -4,6 +4,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { uploadOnCloudinary } from '../utils/Cloudinary.js';3
 import { ApiResponse } from '../utils/ApiResponse.js';
 import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 
 
@@ -577,5 +580,96 @@ const verifyPassword = asyncHandler(async(req,res) => {
 
 })
 
+//***********  FORGET PASSWORD  ************ */
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
+    },
+  });
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,getUserDetailbyId ,verifyPassword} 
+  // Generate OTP
+  const generateOtp = () => {
+    return crypto.randomBytes(3).toString('hex');//Generate a 6-character OTP
+
+  }
+
+  //Forgot Password
+  const forgotPassword = async(req,res) => {
+    const {email} = req.body;
+
+    try{
+        const user = await User.findOne({email});
+
+        if(!user){
+            throw new ApiError(404, "User not found");
+        }
+
+        const otp = generateOtp();
+        user.otp = otp;
+        await user.save();
+
+        //Send OTP to user's email
+        const response = await transporter.sendMail({
+            to: user.email,
+            subject: 'Password Reset OTP',
+            text: `Your OTP for password reset is: ${otp}`,
+          });
+          console.log("fgpass;",response);
+          res.status(200).json(
+            new ApiResponse(200,"OTP sent to email")
+          )
+    }catch(error){
+        console.log("Error while sending otp:",error);
+        throw new ApiError(500,"Server error");
+    }
+  };
+
+//verify OTP
+const verifyOtp = async(req,res) => {
+    const {email,otp} = req.body;
+
+    try {
+        const user = await User.findOne({email});
+
+        if(!user || user.otp !== otp){
+            throw new ApiError(400,"Invalid OTP");
+        }
+
+        res.status(200).json(
+            new ApiResponse(200, "OTP verified")
+        )
+
+    } catch (error) {
+        console.log("Error while verifing otp:",error);
+        throw ApiError(500,"Server error!");
+    }
+};
+
+//Reset Password
+const resetPassword = async(req,res) => {
+    const {email,otp, newPassword} = req.body;
+
+    try {
+        const user = await User.findOne({email});
+
+        if(!user ||user.otp !== otp){
+            throw new ApiError(400,"Invalid OTP");
+        }
+
+        user.password = newPassword
+        user.otp = null; // Clear OTP
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json(
+            new ApiResponse(200,"Password reset successful")
+        )
+    } catch (error) {
+        console.log("Error while reseting password:",error);
+        throw new ApiError(500, "Server error!");
+    }
+}
+
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,getUserDetailbyId ,verifyPassword, forgotPassword, verifyOtp, resetPassword} 

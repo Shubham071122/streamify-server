@@ -46,6 +46,9 @@ const userSchema = new Schema(
         },
         refreshToken: {
             type: String
+        },
+        otp: { // Added OTP field
+          type: String,
         }
     },
     {
