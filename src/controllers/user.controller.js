@@ -633,7 +633,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     if (!decodedToken) {
       throw new ApiError(400, "Invalid token!");
     }
-    // find the user with the id from the token
+    // Find the user with the id from the token
     const user = await User.findOne({ _id: decodedToken._id });
     if (!user) {
       throw new ApiError(404, "User not found!");
