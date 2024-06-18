@@ -651,11 +651,35 @@ const resetPassword = asyncHandler(async (req, res) => {
   }
 });
 
+//**************  DELETE ACCOUNT  ****************** */
+const deleteAccount = asyncHandler(async(req,res) => {
+  const {email} = req.body;
+
+  if(!email) {
+    throw new ApiError(400,"Email is required!");
+  }
+
+  const user = await User.findOne({email});
+
+  if(!user){
+    throw new ApiError(404,"Account not found!");
+  }
+
+  const delUser = await User.deleteOne({_id:user._id})
+
+  console.log("Del user:",delUser);
+
+  res.status(200).json(
+    new ApiResponse(200,"Account delted successfully!")
+  )
+
+})
+
 export {
     changeCurrentPassword, forgotPassword, getCurrentUser, getUserChannelProfile, getUserDetailbyId, getWatchHistory, loginUser,
     logoutUser,
     refreshAccessToken, registerUser, resetPassword, updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage, verifyPassword
+    updateUserCoverImage, verifyPassword,deleteAccount
 };
 
