@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, registerUser,logoutUser,refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar,updateUserCoverImage, getUserChannelProfile, getWatchHistory, getUserDetailbyId,verifyPassword, forgotPassword, verifyOtp, resetPassword } from "../controllers/user.controller.js";
+import { loginUser, registerUser,logoutUser,refreshAccessToken, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateUserAvatar,updateUserCoverImage, getUserChannelProfile, getWatchHistory, getUserDetailbyId,verifyPassword, forgotPassword, resetPassword } from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middelware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -41,11 +41,9 @@ router.route("/:userId").get(verifyJWT,getUserDetailbyId)
 
 router.route("/verify-password").post(verifyJWT,verifyPassword)
 
-router.route("/forget-password").post(verifyJWT,forgotPassword)
+router.route("/forgot-password").post(forgotPassword)
 
-router.route("/verify-otp").post(verifyJWT,verifyOtp)
-
-router.route("/reset-password").post(verifyJWT,resetPassword);
+router.route("/reset-password/:token").post(resetPassword);
 
 export default router;
 
