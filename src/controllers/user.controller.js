@@ -615,7 +615,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
         throw new ApiError(500,err.message, "Error while sending mail!");
       }
 
-      res.status(200).json(new ApiResponse(200, "Email sent"));
+      return res.status(200).json(new ApiResponse(200, "Email sent"));
     });
 
   } catch (error) {
