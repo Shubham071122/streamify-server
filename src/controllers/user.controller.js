@@ -355,7 +355,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
-  return res.status(200, user, "Avatar image updated successfully");
+  return res.status(200).json(
+    new ApiResponse(200, user, "Avatar image updated successfully")
+  );
 });
 
 //************ UPDATING COVER IMAGE *********** */
@@ -384,7 +386,9 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
-  return res.status(200).json(200, user, "Cover image updated successfully");
+  return res.status(200).json(
+    new ApiResponse(200, user, "Cover image updated successfully")
+  );
 });
 
 //***************** USER CHANNEL PROFILE (AGGREGATION PIPELINE) ****************** */
@@ -535,7 +539,7 @@ const getUserDetailbyId = asyncHandler(async (req, res) => {
       throw ApiError(404, "User not found");
     }
     // console.log("User by id:",user);
-    res
+    return res
       .status(200)
       .json(new ApiResponse(200, user, "User Fetched successfully"));
   } catch (error) {
@@ -642,7 +646,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     user.password = newPassword;
     await user.save({ validateBeforeSave: false });
 
-    res
+    return res
       .status(200)
       .json(new ApiResponse(200, "Password updated successfully!"));
   } catch (error) {
@@ -669,7 +673,7 @@ const deleteAccount = asyncHandler(async(req,res) => {
 
   console.log("Del user:",delUser);
 
-  res.status(200).json(
+  return res.status(200).json(
     new ApiResponse(200,"Account delted successfully!")
   )
 
