@@ -19,9 +19,9 @@ const createPlaylist = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Name and description are required");
     }
 
-    if (!videoId) {
-        throw new ApiError(400, "Video id is required")
-    }
+    // if (!videoId) {
+    //     throw new ApiError(400, "Video id is required")
+    // }
 
     try {
         const playlist = await Playlist.create({
