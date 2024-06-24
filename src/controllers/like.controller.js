@@ -128,7 +128,7 @@ const toggleTweetLike = asyncHandler(async(req,res) => {
 })
 
 //************ GET ALL LIKED VIDEO ************** */
-const getLikedVideos = asyncHandler(async(req,res) => {
+const getAllLikedVideos = asyncHandler(async(req,res) => {
     const userId = req.user._id;
 
     if(!userId){
@@ -153,4 +153,30 @@ const getLikedVideos = asyncHandler(async(req,res) => {
     }
 })
 
-export{toggleVideoLike, toggleCommentLike,toggleTweetLike,getLikedVideos};
+//************ GET LIKED COUNT ON VIDEO ************** */
+const getVideoLike = asyncHandler(async(req,res) => {
+    const {videoId} = req.params;
+
+    if(!videoId) {
+        throw new ApiError(400,"Video id is required");
+    }
+
+    try {
+        const likes = await Like.find({video:videoId})
+
+        if(!likes){
+            throw new ApiError(404,"No video like found!")
+        }
+
+        return res.status(200).json(
+            new ApiResponse(200,likes,"Like fetched successfully")
+        )
+
+    } catch (error) {
+        console.log("Error fetching likes:",error);
+        throw new ApiError(500,"Error fetching likes")
+    }
+})
+
+
+export{toggleVideoLike, toggleCommentLike,toggleTweetLike,getAllLikedVideos, getVideoLike};
