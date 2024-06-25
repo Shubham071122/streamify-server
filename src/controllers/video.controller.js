@@ -40,7 +40,7 @@ const getVideos = asyncHandler(async (req, res) => {
     userId,
   } = req.query;
 
-  console.log('Received query:', query);
+  console.log("Received query:", query);
 
   const filter = {};
   if (query) {
@@ -92,46 +92,45 @@ const getVideos = asyncHandler(async (req, res) => {
       })
     );
   } catch (error) {
-    console.error('Error while fetching videos:', error);
+    console.error("Error while fetching videos:", error);
     throw new ApiError(404, "Video not found!");
   }
 });
 
-
 //*********** FETCHING VIDEOS FOR HOME SCREEN ********** */
-const getAllVideos = asyncHandler(async(req,res) => {
-     const {
-       page = 1,
-       limit = 10,
-       sortBy = "createdAt",
-       sortType = "desc",
-     } = req.params;
+const getAllVideos = asyncHandler(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    sortBy = "createdAt",
+    sortType = "desc",
+  } = req.params;
 
-     try {
-       const sortOptions = {};
-       sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
+  try {
+    const sortOptions = {};
+    sortOptions[sortBy] = sortType === "desc" ? -1 : 1;
 
-       const videos = await Video.find()
-         .populate("owner", "fullName avatar")
-         .sort(sortOptions)
-         .skip((page - 1) * limit)
-         .limit(parseInt(limit));
+    const videos = await Video.find()
+      .populate("owner", "fullName avatar")
+      .sort(sortOptions)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
-       const totalVideos = await Video.countDocuments();
-       const totalPages = Math.ceil(totalVideos / limit);
+    const totalVideos = await Video.countDocuments();
+    const totalPages = Math.ceil(totalVideos / limit);
 
-       res.status(200).json(
-         new ApiResponse(200, "Videos fetched successfully", {
-           videos,
-           totalPages,
-           totalVideos,
-           currentPage: parseInt(page),
-         })
-       );
-     } catch (error) {
-       throw new ApiError(404, "Videos not found!");
-     }
-})
+    res.status(200).json(
+      new ApiResponse(200, "Videos fetched successfully", {
+        videos,
+        totalPages,
+        totalVideos,
+        currentPage: parseInt(page),
+      })
+    );
+  } catch (error) {
+    throw new ApiError(404, "Videos not found!");
+  }
+});
 
 //************  PUBLISHING VIDEO *********** */
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -201,15 +200,19 @@ const getVideoById = asyncHandler(async (req, res) => {
   }
 
   // Fetching video from database
-  const video = await Video.findById(videoId)
-    .populate("owner", "fullName avatar")
+  const video = await Video.findById(videoId).populate(
+    "owner",
+    "fullName avatar"
+  );
 
   if (!video) {
     throw new ApiError(404, "Video not found");
   }
   // console.log("video:::",video)
 
-  return res.status(200).json(new ApiResponse(200, video,"Video fetched successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, video, "Video fetched successfully"));
 });
 
 //********* UPDATING VIDEO *********** */
@@ -345,6 +348,55 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
 });
 
+//*********** INCREMENT VIEW COUNT ************* */
+const incrementViewCount = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  if (!videoId) {
+    throw new ApiError(400, "Video id is  required");
+  }
+
+  try {
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      throw new ApiError(404, "Video not found");
+    }
+    video.views += 1;
+    await video.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, video.views, "View count incremented"));
+  } catch (error) {
+    console.log("Error incrementing view count:", error);
+    throw new ApiError(500, "Error incrementing view count");
+  }
+});
+//*********** GET TOTAL VIEW COUNT ************* */
+const getViewCount = asyncHandler(async (req, res) => {
+  const { videoId } = req.params;
+
+  if (!videoId) {
+    throw new ApiError(400, "Video id is  required");
+  }
+
+  try {
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      throw new ApiError(404, "Video not found");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, video.views, "View count incremented"));
+  } catch (error) {
+    console.log("Error getting view count:", error);
+    throw new ApiError(500, "Error getting view count");
+  }
+});
+
 export {
   getVideos,
   getAllVideos,
@@ -353,4 +405,6 @@ export {
   updateVideo,
   deleteVideo,
   togglePublishStatus,
+  incrementViewCount,
+  getViewCount,
 };
