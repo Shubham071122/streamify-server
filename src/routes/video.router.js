@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getVideos,getAllVideos,deleteVideo, getVideoById, publishAVideo, updateVideo, togglePublishStatus,incrementViewCount,getViewCount, } from "../controllers/video.controller.js";
+import { getVideos,getAllVideos,deleteVideo, getVideoById, getUserVideos, publishAVideo, updateVideo, togglePublishStatus,incrementViewCount,getViewCount, } from "../controllers/video.controller.js";
 import { upload } from "../middlewares/multer.middelware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -24,6 +24,8 @@ router.route("/publish").post(upload.fields([
 router.route("/:videoId").get(getVideoById) 
 
 router.route("/update-video/:videoId").patch(upload.single("thumbnail"),updateVideo)
+
+router.route("/user-videos").get(getUserVideos);
 
 router.route("/delete-video/:videoId").delete(deleteVideo)
 

@@ -193,14 +193,21 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
 //********* FETCHING VIDEO VIA ID ********** */
 const getVideoById = asyncHandler(async (req, res) => {
-  const { videoId } = req.params;
+  const { videoId } = req.params;//we geting string videoid so convert it into objectid.
+  let newVideoId;
 
-  if (!videoId) {
+  if (!mongoose.Types.ObjectId.isValid(videoId)) {
+    newVideoId = new mongoose.Types.ObjectId(videoId);
+  } else {
+    newVideoId = videoId;
+  }
+
+  if (!newVideoId) {
     throw new ApiError(400, "Video ID is required");
   }
 
   // Fetching video from database
-  const video = await Video.findById(videoId).populate(
+  const video = await Video.findById(newVideoId).populate(
     "owner",
     "fullName avatar"
   );
@@ -213,6 +220,27 @@ const getVideoById = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, video, "Video fetched successfully"));
+});
+
+//********* FETCHING ALL VIDEO FOR DASHBOARD ********** */
+const getUserVideos = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  console.log("Userid:", userId);
+
+  if (!userId) {
+    throw new ApiError(400, "User ID is required");
+  }
+
+  const videos = await Video.find({ owner: userId });
+
+  if (!videos || videos.length === 0) {
+    throw new ApiError(404, "Videos not found!");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, videos, "User videos fetched successfully!"));
 });
 
 //********* UPDATING VIDEO *********** */
@@ -337,15 +365,15 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
 
   await video.save();
 
-  res
+  return res
     .status(200)
     .json(
       new ApiResponse(
         200,
+        video.isPublished,
         "Publish staus toggled successfully",
-        video.isPublished
       )
-    );
+    );       
 });
 
 //*********** INCREMENT VIEW COUNT ************* */
@@ -402,6 +430,7 @@ export {
   getAllVideos,
   publishAVideo,
   getVideoById,
+  getUserVideos,
   updateVideo,
   deleteVideo,
   togglePublishStatus,
