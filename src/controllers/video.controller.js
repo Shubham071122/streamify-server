@@ -194,13 +194,14 @@ const publishAVideo = asyncHandler(async (req, res) => {
 //********* FETCHING VIDEO VIA ID ********** */
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;//we geting string videoid so convert it into objectid.
-  let newVideoId;
-
-  if (!mongoose.Types.ObjectId.isValid(videoId)) {
-    newVideoId = new mongoose.Types.ObjectId(videoId);
-  } else {
-    newVideoId = videoId;
+  console.log("vidId:",videoId);
+   // Validate videoId
+   if (!mongoose.Types.ObjectId.isValid(videoId)) {
+      throw new ApiError(400, 'Invalid video ID');
   }
+
+  // Convert videoId to ObjectId
+  const newVideoId = new mongoose.Types.ObjectId(videoId);
 
   if (!newVideoId) {
     throw new ApiError(400, "Video ID is required");
@@ -226,13 +227,14 @@ const getVideoById = asyncHandler(async (req, res) => {
 const getUserVideos = asyncHandler(async (req, res) => {
   const userId = req.user._id;
 
-  console.log("Userid:", userId);
-
   if (!userId) {
     throw new ApiError(400, "User ID is required");
   }
 
-  const videos = await Video.find({ owner: userId });
+  const videos = await Video.find({ owner: userId }).populate(
+    "owner",
+    "fullName avatar"
+  );
 
   if (!videos || videos.length === 0) {
     throw new ApiError(404, "Videos not found!");

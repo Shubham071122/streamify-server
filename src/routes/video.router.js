@@ -21,7 +21,7 @@ router.route("/publish").post(upload.fields([
     }
 ]),publishAVideo)
 
-router.route("/:videoId").get(getVideoById) 
+router.route("/v/:videoId").get(getVideoById) 
 
 router.route("/update-video/:videoId").patch(upload.single("thumbnail"),updateVideo)
 
