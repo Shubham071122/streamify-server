@@ -274,9 +274,9 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   //checking new thumbnail provided or not
   const thumbnailLocalPath = req.file?.path;
-  if (!thumbnailLocalPath) {
-    throw new ApiError(400, "Thumbnail is required");
-  }
+  // if (!thumbnailLocalPath) {
+  //   throw new ApiError(400, "Thumbnail is required");
+  // }
   //upload on cloudinary
   const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
