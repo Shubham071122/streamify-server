@@ -125,12 +125,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 //************************** LOGIN ********************
 const loginUser = asyncHandler(async (req, res) => {
-  //req body -> data
-  // username or email
-  // find the user
-  // password check
-  // access and refresh token
-  // send secure cookies.
 
   //** fetching data from req body -> data
   const { email, username, password } = req.body;
@@ -172,8 +166,9 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
-    // both use for hiding the data from client side , changes only done through backend only
+    secure: false,//this will be true if we using https connection.
+    sameSite: 'None',//This will change is site is in same domain(Strict);
+    // all use for avoiding changes the data from client side , changes only done through backend only
   };
 
   //** sending resoponse data to the user */
@@ -187,7 +182,6 @@ const loginUser = asyncHandler(async (req, res) => {
         {
           user: logedInUser,
           accessToken,
-          refreshToken,
         },
         "User logged in successfully"
       )
@@ -210,7 +204,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: true,
+    secure: false,
+    sameSite: 'None',
   };
   return res
     .status(200)
@@ -223,6 +218,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
+
+    console.log("incRfTkn:",incomingRefreshToken);
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
@@ -245,7 +242,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     const options = {
       httpOnly: true,
-      secure: true,
+      secure: false,
+      sameSite: 'None',
     };
 
     const { accessToken, newRefreshToken } =
