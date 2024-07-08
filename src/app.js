@@ -4,6 +4,10 @@ import cors from "cors";
 
 const app = express();
 
+app.get("/",(req,res) =>{
+  res.send("wlcome to streamify");
+})
+
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN,
