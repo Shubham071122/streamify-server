@@ -126,22 +126,17 @@ const registerUser = asyncHandler(async (req, res) => {
 //************************** LOGIN ********************
 const loginUser = asyncHandler(async (req, res) => {
 
-  //** fetching data from req body -> data
+  // console.log(req.body);
   const { email, username, password } = req.body;
 
-  //** checking username and email is passed or not */
-  console.log(email);
   if (!(username || email)) {
     throw new ApiError(400, "username or email is required");
   }
   console.log("outside if block");
-  //** checking user in mongodb  */
   const user = await User.findOne({
-    // findOne mongooes ka method h to iko sirf mongodb ke data pe hi laga skte h
-    $or: [{ username }, { email }], // $or is a monogodb operator that use ot find any one is it username or email .it return
+    $or: [{ username }, { email }], 
   });
 
-  // ** crose checking is user found or not in data base
   if (!user) {
     throw new ApiError(404, "User does not exist");
   }
