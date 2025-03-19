@@ -35,15 +35,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
 //********************************** REGISTER ****************************
 const registerUser = asyncHandler(async (req, res) => {
-  //get user details from forntend
-  //validation(email sahi se likha h ya nahi)
-  //check if user already exists
-  //check for images, check for avatar
-  // upload them to cloudinary, avatar check from cloudinary is uploaded or not
-  //create user object - create entry in db
-  //remove password and refresh token field from response
-  // check for user creation
-  //return res
 
   //*getting user details:
   const { fullName, email, username, password } = req.body;
