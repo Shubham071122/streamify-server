@@ -82,6 +82,8 @@ const getUserChannelSubscribers = asyncHandler(async(req,res) => {
 const getSubscribedChannels = asyncHandler(async(req,res) => {
     const {subscriberId} = req.params;
 
+    console.log("SUBID: ", subscriberId);   
+
     if(!subscriberId){
         throw new ApiError(400,"Subscriber id is required")
     }

@@ -110,7 +110,7 @@ const registerUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   );
 
-  console.log(createdUser);
+  console.log("Create user:", createdUser);
 
   //checking for user creation:
   if (!createdUser) {
@@ -119,13 +119,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
   //return res:
   return res
-    .status(201)
+    .status(200)
     .json(new ApiResponse(200, createdUser, "User Registerd successfully"));
 });
 
 //************************** LOGIN ********************
 const loginUser = asyncHandler(async (req, res) => {
-
   // console.log(req.body);
   const { email, username, password } = req.body;
 
@@ -134,7 +133,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
   console.log("outside if block");
   const user = await User.findOne({
-    $or: [{ username }, { email }], 
+    $or: [{ username }, { email }],
   });
 
   if (!user) {
@@ -154,6 +153,12 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
 
+  console.log("accesstoken:", accessToken);
+  console.log("refreshtoken:", refreshToken);
+
+  user.refreshToken = refreshToken;
+  await user.save();
+
   const logedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
@@ -161,16 +166,14 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const options = {
     httpOnly: true,
-    secure: false,//this will be true if we using https connection.
-    sameSite: 'None',//This will change is site is in same domain(Strict);
-    // all use for avoiding changes the data from client side , changes only done through backend only
+    secure: process.env.MODE === "production", // Should be a boolean
+    sameSite: process.env.MODE === "production" ? "None" : "Lax", // Adjusted for security
   };
 
   //** sending resoponse data to the user */
   return res
     .status(200)
     .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
     .json(
       new ApiResponse(
         200,
@@ -185,28 +188,24 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // ****************************** LOGOUT ************************
 const logoutUser = asyncHandler(async (req, res) => {
+  // Clear refresh token from DB
   await User.findByIdAndUpdate(
     req.user._id,
-    {
-      $set: {
-        refreshToken: undefined, // ye database se refresh token ko undefin set kr dega
-      },
-    },
-    {
-      new: true,
-    }
+    { $set: { refreshToken: "" } }, // Setting it to an empty string
+    { new: true }
   );
 
+  // Cookie options
   const options = {
     httpOnly: true,
-    secure: false,
-    sameSite: 'None',
+    secure: process.env.MODE === "production", // Ensure HTTPS in production
+    sameSite: "None",
   };
+
   return res
     .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json(new ApiResponse(200, {}, "User logged Out"));
+    .clearCookie("accessToken", options) // Clear accessToken
+    .json(new ApiResponse(200, {}, "User logged out successfully"));
 });
 
 //************ MAKING REFRESH THE ACCESS TOKEN *************** */
@@ -214,7 +213,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
 
-    console.log("incRfTkn:",incomingRefreshToken);
+  console.log("incRfTkn:", incomingRefreshToken);
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
@@ -238,23 +237,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     const options = {
       httpOnly: true,
       secure: false,
-      sameSite: 'None',
+      sameSite: "None",
     };
 
-    const { accessToken, refreshToken } =
-      await generateAccessAndRefreshTokens(user._id);
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user._id
+    );
 
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json(
-        new ApiResponse(
-          200,
-          { accessToken },
-          "Access token refreshed"
-        )
-      );
+      .json(new ApiResponse(200, { accessToken }, "Access token refreshed"));
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
@@ -348,9 +342,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
-  return res.status(200).json(
-    new ApiResponse(200, user, "Avatar image updated successfully")
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Avatar image updated successfully"));
 });
 
 //************ UPDATING COVER IMAGE *********** */
@@ -379,9 +373,9 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     }
   ).select("-password");
 
-  return res.status(200).json(
-    new ApiResponse(200, user, "Cover image updated successfully")
-  );
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Cover image updated successfully"));
 });
 
 //***************** USER CHANNEL PROFILE (AGGREGATION PIPELINE) ****************** */
@@ -605,12 +599,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
     //Send the email
     transporter.sendMail(mailOptions, (err, info) => {
       if (err) {
-        throw new ApiError(500,err.message, "Error while sending mail!");
+        throw new ApiError(500, err.message, "Error while sending mail!");
       }
 
       return res.status(200).json(new ApiResponse(200, "Email sent"));
     });
-
   } catch (error) {
     console.log("Error while sending email:", error);
     throw new ApiError(500, "Server error");
@@ -649,34 +642,43 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 //**************  DELETE ACCOUNT  ****************** */
-const deleteAccount = asyncHandler(async(req,res) => {
-  const {email} = req.body;
+const deleteAccount = asyncHandler(async (req, res) => {
+  const { email } = req.body;
 
-  if(!email) {
-    throw new ApiError(400,"Email is required!");
+  if (!email) {
+    throw new ApiError(400, "Email is required!");
   }
 
-  const user = await User.findOne({email});
+  const user = await User.findOne({ email });
 
-  if(!user){
-    throw new ApiError(404,"Account not found!");
+  if (!user) {
+    throw new ApiError(404, "Account not found!");
   }
 
-  const delUser = await User.deleteOne({_id:user._id})
+  const delUser = await User.deleteOne({ _id: user._id });
 
-  console.log("Del user:",delUser);
+  console.log("Del user:", delUser);
 
-  return res.status(200).json(
-    new ApiResponse(200,"Account delted successfully!")
-  )
-
-})
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Account delted successfully!"));
+});
 
 export {
-    changeCurrentPassword, forgotPassword, getCurrentUser, getUserChannelProfile, getUserDetailbyId, getWatchHistory, loginUser,
-    logoutUser,
-    refreshAccessToken, registerUser, resetPassword, updateAccountDetails,
-    updateUserAvatar,
-    updateUserCoverImage, verifyPassword,deleteAccount
+  changeCurrentPassword,
+  deleteAccount,
+  forgotPassword,
+  getCurrentUser,
+  getUserChannelProfile,
+  getUserDetailbyId,
+  getWatchHistory,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  registerUser,
+  resetPassword,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+  verifyPassword,
 };
-

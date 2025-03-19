@@ -31,7 +31,6 @@ import dotenv from 'dotenv'
 import connectDB from './db/index.js'
 import {app} from './app.js'
 
-// require('dotenv').config({path:'./.env'}) //this also work but the consistency ko kharab kr rah so .
 
 dotenv.config({
     path: './.env'
@@ -46,6 +45,3 @@ connectDB()
 .catch((err) => {
     console.log("Mongodb connection faild !!! ",err);
 })
-
-// to use this dotenv we have to change some experiment in script in package.json file
-//  -> nodemon -r dotenv/config --experimental-json-modules
