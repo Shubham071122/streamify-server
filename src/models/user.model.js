@@ -88,6 +88,7 @@ userSchema.methods.generateAccessToken = function () {
     } catch (error) {
         console.error("Error generating access token: ", error);
         // throw error;
+        return null;
     }
 }
 
@@ -107,6 +108,7 @@ userSchema.methods.generateRefreshToken = function () {
     } catch (error) {
         console.log("Error while genterating refreshtoken: ", error);
         // throw error;
+        return null;
     }
 }
 
